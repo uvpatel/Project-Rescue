@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
   const stateHash = createHash("sha256").update(state).digest("hex");
   const [installState] = await db.select().from(githubInstallStates).where(and(eq(githubInstallStates.stateHash, stateHash), eq(githubInstallStates.userId, session.user.id), isNull(githubInstallStates.consumedAt), gt(githubInstallStates.expiresAt, new Date()))).limit(1);
   if (!installState) return NextResponse.redirect(new URL("/repositories?github_error=invalid_state", request.url));
-  await db.update(githubInstallStates).set({ consumedAt: new Date() }).where(and(eq(githubInstallStates.id, installState.id), isNull(githubInstallStates.consumedAt)));
+  const [consumedState] = await db.update(githubInstallStates).set({ consumedAt: new Date() }).where(and(eq(githubInstallStates.id, installState.id), isNull(githubInstallStates.consumedAt), gt(githubInstallStates.expiresAt, new Date()))).returning({ id: githubInstallStates.id });
+  if (!consumedState) return NextResponse.redirect(new URL("/repositories?github_error=invalid_state", request.url));
   try {
     const installationId = parsedInstallationId.data;
     const installation = await getInstallation(installationId);
