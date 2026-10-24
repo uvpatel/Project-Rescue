@@ -1,4 +1,5 @@
 import "server-only";
+import { createPrivateKey, createSign } from "node:crypto";
 const API_BASE = "https://api.github.com";
 function base64Url(input: string | Uint8Array): string {
   const bytes = typeof input === "string" ? new TextEncoder().encode(input) : input;
@@ -14,13 +15,15 @@ function requiredEnv(name: string): string {
 async function createAppJwt(): Promise<string> {
   const appId = requiredEnv("GITHUB_APP_ID");
   const pem = requiredEnv("GITHUB_APP_PRIVATE_KEY").replace(/\\n/g, "\n");
-  const body = pem.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g, "");
-  const binary = Uint8Array.from(atob(body), (character) => character.charCodeAt(0));
-  const key = await crypto.subtle.importKey("pkcs8", binary, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
   const now = Math.floor(Date.now() / 1000);
   const unsigned = `${base64Url(JSON.stringify({ alg: "RS256", typ: "JWT" }))}.${base64Url(JSON.stringify({ iat: now - 60, exp: now + 8 * 60, iss: appId }))}`;
-  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, new TextEncoder().encode(unsigned));
-  return `${unsigned}.${base64Url(new Uint8Array(signature))}`;
+  // Node's key parser supports GitHub's downloaded RSA PRIVATE KEY (PKCS#1)
+  // and PRIVATE KEY (PKCS#8) PEM formats.
+  const signer = createSign("RSA-SHA256");
+  signer.update(unsigned);
+  signer.end();
+  const signature = signer.sign(createPrivateKey(pem)).toString("base64url");
+  return `${unsigned}.${signature}`;
 }
 async function githubRequest<T>(path: string, token: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
