@@ -5,6 +5,7 @@ export * from "./auth.schema";
 export * from "./workspace.schema";
 export * from "./workspace-member.schema";
 export * from "./github-installation.schema";
+export * from "./github-install-state.schema";
 export * from "./project.schema";
 
 // GitHub Project State

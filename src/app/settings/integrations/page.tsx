@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { GitHubAppConnect } from "@/components/github/GitHubAppConnect";
 
 interface GithubStatus {
   connected: boolean;
@@ -63,6 +64,8 @@ export default function IntegrationsPage() {
             </p>
           </div>
         </div>
+
+        <GitHubAppConnect />
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* GitHub Card */}
