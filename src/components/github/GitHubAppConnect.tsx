@@ -8,7 +8,6 @@ export function GitHubAppConnect() {
   const { currentWorkspace } = useWorkspace();
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [connected, setConnected] = useState(false);
   async function connect() {
     if (!currentWorkspace?.id) { setError("Choose a workspace before connecting GitHub."); return; }
     setConnecting(true); setError(null);
@@ -29,7 +28,6 @@ export function GitHubAppConnect() {
     <CardContent className="space-y-3">
       <div className="flex items-start gap-2 text-sm text-muted-foreground"><ShieldCheck className="mt-0.5 size-4 shrink-0" /><span>Choose only the repositories you want ProjectRescue to access on GitHub’s installation screen.</span></div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      {connected && <p role="status" className="text-sm text-green-600">GitHub connection initiated.</p>}
       <Button onClick={connect} disabled={connecting || !currentWorkspace?.id} className="gap-2">
         <Github className="size-4" />{connecting ? "Redirecting…" : "Connect GitHub repositories"}<ExternalLink className="size-3.5" />
       </Button>
